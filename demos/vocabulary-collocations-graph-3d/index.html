@@ -89,8 +89,8 @@ words.forEach(([word, associations]) => {
 
 const graph = ForceGraph3D()(document.getElementById('3d-graph'))
   .graphData(data)
-  .linkDirectionalArrowLength(3.5)
-  .linkDirectionalArrowRelPos(1)
+  //.linkDirectionalArrowLength(3.5)
+  //.linkDirectionalArrowRelPos(1)
   .nodeThreeObject(node => {
     const sprite = new SpriteText(node.id);
     sprite.color = node.color;
