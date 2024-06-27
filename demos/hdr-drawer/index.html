@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HDR Drawing</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        .panel {
+            font-family: 'Courier New', Courier, monospace;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            z-index: 99999;
+        }
+        .level {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        .brush-touch {
+            position: absolute;
+            border-radius: 100%;
+            user-select: none;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="panel">
+        Brush size: <input type="range" min="0" max="100" value="20" id="size" /><br/>
+        Brush softness: <input type="range" min="0" max="10" value="0" id="blur" /><br/>
+        Intensity: <input type="range" min="0" max="100" value="100" id="intensity" />
+
+    </div>
+        <!-- <img id="hdrLayer" src="./output.avif" alt="HDR Layer"> -->
+    <script>
+function Control(id, process) {
+    const element = document.getElementById(id);
+    let value = process(element.value);
+    element.addEventListener('change', e => {
+        setTimeout(() => value = process(element.value), 10);
+    });
+    return {
+        get: () => value,
+    };
+}
+
+const controls = {
+    size: Control('size', (val) => Number(val)),
+    blur: Control('blur', (val) => Number(val)),
+    intensity: Control('intensity', (val) => Number(val) / 100),
+};
+
+let level = null;
+
+function startDrawing(e) {
+    level = document.createElement('div');
+    level.className = 'level';
+    document.body.appendChild(level);
+
+    const BRUSH_BLUR = controls.blur.get();
+    const BRUSH_INTENSITY = controls.intensity.get();
+    if (BRUSH_BLUR !== 0) {
+        level.style.filter = `blur(${BRUSH_BLUR}px)`;
+    }
+    if (BRUSH_INTENSITY !== 1) {
+        level.style.opacity = Number(BRUSH_INTENSITY.toFixed(2));
+    }
+
+    drawPoint(e);
+}
+
+function drawPoint(e) {
+    if (!level) return;
+
+    const BRUSH_RADIUS = controls.size.get();
+
+    const x = e.clientX - BRUSH_RADIUS / 2;
+    const y = e.clientY - BRUSH_RADIUS / 2;
+
+    const elem = document.createElement('img');
+    elem.src = 'https://keyten.github.io/demos/hdr-drawer/brighter-white.avif';
+    elem.className = 'brush-touch';
+    elem.style.top = y + 'px';
+    elem.style.left = x + 'px';
+    elem.style.width = BRUSH_RADIUS + 'px';
+    elem.style.height = BRUSH_RADIUS + 'px';
+    level.appendChild(elem);
+}
+
+function stopDrawing() {
+    level = null;
+}
+
+window.addEventListener('mousedown', startDrawing);
+window.addEventListener('mousemove', drawPoint);
+window.addEventListener('mouseup', stopDrawing);
+document.getElementById('panel').addEventListener('mousedown', e => e.stopPropagation());
+document.getElementById('panel').addEventListener('touchstart', e => e.stopPropagation());
+
+// Touch events for mobile support
+window.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    startDrawing(e.touches[0]);
+});
+window.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    drawPoint(e.touches[0]);
+});
+window.addEventListener('touchend', stopDrawing);
+    </script>
+</body>
+</html>
